@@ -1,10 +1,4 @@
-import {
-  App,
-  CfnOutput,
-  RemovalPolicy,
-  Stack,
-  StackProps
-} from "@aws-cdk/core";
+import { App, CfnOutput, Stack, StackProps } from "@aws-cdk/core";
 import { Bucket } from "@aws-cdk/aws-s3";
 import {
   CfnCloudFrontOriginAccessIdentity,
@@ -16,7 +10,7 @@ export class WebsiteStack extends Stack {
   constructor(scope: App, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const bucketName = "test-cdk-bucket-name";
+    const bucketName = this.node.tryGetContext("bucketName");
 
     // Identity
     const originAccessIdentity = new CfnCloudFrontOriginAccessIdentity(
@@ -37,8 +31,7 @@ export class WebsiteStack extends Stack {
         blockPublicPolicy: true,
         ignorePublicAcls: true,
         restrictPublicBuckets: true
-      },
-      removalPolicy: RemovalPolicy.DESTROY
+      }
     });
     webSiteBucket.grantRead(
       new CanonicalUserPrincipal(originAccessIdentity.attrS3CanonicalUserId)

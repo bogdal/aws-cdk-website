@@ -1,81 +1,19 @@
-import { App, CfnOutput, Stack, StackProps } from "@aws-cdk/core";
-import { Bucket } from "@aws-cdk/aws-s3";
-import {
-  CfnCloudFrontOriginAccessIdentity,
-  CloudFrontWebDistribution
-} from "@aws-cdk/aws-cloudfront";
-import { CanonicalUserPrincipal } from "@aws-cdk/aws-iam";
+import { App, Stack, StackProps } from "@aws-cdk/core";
 
-export class WebsiteStack extends Stack {
-  constructor(scope: App, id: string, props?: StackProps) {
-    super(scope, id, props);
+import { SinglePageApplication } from "./src";
 
-    const bucketName = this.node.tryGetContext("bucketName");
+class WebsiteStack extends Stack {
+  constructor(parent: App, name: string, props: StackProps) {
+    super(parent, name, props);
 
-    // Identity
-    const originAccessIdentity = new CfnCloudFrontOriginAccessIdentity(
-      this,
-      "OriginAccessIdentity",
-      {
-        cloudFrontOriginAccessIdentityConfig: {
-          comment: `CloudFront Identity for ${bucketName}`
-        }
-      }
-    );
-
-    // S3 Bucket
-    const webSiteBucket = new Bucket(this, "WebSiteBucket", {
-      bucketName,
-      blockPublicAccess: {
-        blockPublicAcls: true,
-        blockPublicPolicy: true,
-        ignorePublicAcls: true,
-        restrictPublicBuckets: true
-      }
-    });
-    webSiteBucket.grantRead(
-      new CanonicalUserPrincipal(originAccessIdentity.attrS3CanonicalUserId)
-    );
-
-    // CloudFront distribution
-    const distribution = new CloudFrontWebDistribution(
-      this,
-      "WebSiteDistribution",
-      {
-        defaultRootObject: "index.html",
-        originConfigs: [
-          {
-            s3OriginSource: {
-              originAccessIdentityId: originAccessIdentity.ref,
-              s3BucketSource: webSiteBucket
-            },
-            behaviors: [
-              {
-                isDefaultBehavior: true,
-                forwardedValues: {
-                  queryString: true,
-                  cookies: {
-                    forward: "none"
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      }
-    );
-    new CfnOutput(this, "Bucket", { value: webSiteBucket.bucketName });
-    new CfnOutput(this, "DistributionId", {
-      value: distribution.distributionId
-    });
-    new CfnOutput(this, "DistributionDomainName", {
-      value: distribution.domainName
+    new SinglePageApplication(this, "SPA", {
+      bucketName: this.node.tryGetContext("bucket_name")
     });
   }
 }
 
 const app = new App();
 
-new WebsiteStack(app, "WebSite", { env: { region: "us-east-1" } });
+new WebsiteStack(app, "Website", { env: { region: "us-east-1" } });
 
 app.synth();

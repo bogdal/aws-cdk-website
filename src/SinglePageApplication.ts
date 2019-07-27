@@ -13,10 +13,11 @@ import {
 } from "@aws-cdk/aws-iam";
 import { Code, Function, Runtime, Version } from "@aws-cdk/aws-lambda";
 import { Bucket } from "@aws-cdk/aws-s3";
-import { Construct, CfnOutput, RemovalPolicy } from "@aws-cdk/core";
+import { Construct, CfnOutput, Duration, RemovalPolicy } from "@aws-cdk/core";
 
 export interface IProps {
   bucketName: string;
+  enableSSR: boolean;
 }
 
 export class SinglePageApplication extends Construct {
@@ -51,20 +52,46 @@ export class SinglePageApplication extends Construct {
       new CanonicalUserPrincipal(originAccessIdentity.attrS3CanonicalUserId)
     );
 
-    // Lambda@Edge function
-    const lambda = new Version(this, "LambdaVersion", {
-      lambda: new Function(this, "PushStateUrlsLambda", {
-        code: Code.asset(path.join(__dirname, "lambda-edge/push-state-urls")),
-        handler: "index.handler",
-        runtime: Runtime.NODEJS_10_X,
-        role: new Role(this, "LambdaExecutionRole", {
-          assumedBy: new CompositePrincipal(
-            new ServicePrincipal("lambda.amazonaws.com"),
-            new ServicePrincipal("edgelambda.amazonaws.com")
-          )
-        })
-      })
+    // Lambda@Edge functions
+    const lambdaRole = new Role(this, "LambdaExecutionRole", {
+      assumedBy: new CompositePrincipal(
+        new ServicePrincipal("lambda.amazonaws.com"),
+        new ServicePrincipal("edgelambda.amazonaws.com")
+      )
     });
+    const lambdaFunctionAssociations = [
+      {
+        eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
+        lambdaFunction: new Version(this, "OriginRequestLambdaVersion", {
+          lambda: new Function(this, "OriginRequestLambda", {
+            code: Code.asset(
+              path.join(__dirname, "lambda-edge/origin-request")
+            ),
+            handler: "index.handler",
+            runtime: Runtime.NODEJS_10_X,
+            timeout: Duration.seconds(30),
+            role: lambdaRole
+          })
+        })
+      },
+      ...(props.enableSSR
+        ? [
+            {
+              eventType: LambdaEdgeEventType.VIEWER_REQUEST,
+              lambdaFunction: new Version(this, "ViewerRequestLambdaVersion", {
+                lambda: new Function(this, "ViewerRequestLambda", {
+                  code: Code.asset(
+                    path.join(__dirname, "lambda-edge/viewer-request")
+                  ),
+                  handler: "index.handler",
+                  runtime: Runtime.NODEJS_10_X,
+                  role: lambdaRole
+                })
+              })
+            }
+          ]
+        : [])
+    ];
 
     // CloudFront distribution
     const distribution = new CloudFrontWebDistribution(this, "Distribution", {
@@ -82,14 +109,10 @@ export class SinglePageApplication extends Construct {
                 queryString: true,
                 cookies: {
                   forward: "none"
-                }
+                },
+                ...(props.enableSSR && { headers: ["User-Agent"] })
               },
-              lambdaFunctionAssociations: [
-                {
-                  eventType: LambdaEdgeEventType.ORIGIN_REQUEST,
-                  lambdaFunction: lambda
-                }
-              ]
+              lambdaFunctionAssociations
             }
           ]
         }

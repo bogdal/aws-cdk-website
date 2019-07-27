@@ -12,15 +12,15 @@
   "homepage": "https://github.com/bogdal/aws-cdk-website",
   "devDependencies": {
     "@types/node": "^12.6.8",
-    "aws-cdk": "^1.1.0",
+    "aws-cdk": "^1.2.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
   },
   "dependencies": {
-    "@aws-cdk/aws-cloudfront": "^1.1.0",
-    "@aws-cdk/aws-iam": "^1.1.0",
-    "@aws-cdk/aws-lambda": "^1.1.0",
-    "@aws-cdk/aws-s3": "^1.1.0",
-    "@aws-cdk/core": "^1.1.0"
+    "@aws-cdk/aws-cloudfront": "^1.2.0",
+    "@aws-cdk/aws-iam": "^1.2.0",
+    "@aws-cdk/aws-lambda": "^1.2.0",
+    "@aws-cdk/aws-s3": "^1.2.0",
+    "@aws-cdk/core": "^1.2.0"
   }
 }

@@ -7,7 +7,8 @@ class WebsiteStack extends Stack {
     super(parent, name, props);
 
     new SinglePageApplication(this, "SPA", {
-      bucketName: this.node.tryGetContext("bucket_name")
+      bucketName: this.node.tryGetContext("bucket_name"),
+      enableSSR: this.node.tryGetContext("enable_ssr") || false
     });
   }
 }

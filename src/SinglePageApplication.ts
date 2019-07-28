@@ -17,7 +17,8 @@ import { Construct, CfnOutput, Duration, RemovalPolicy } from "@aws-cdk/core";
 
 export interface IProps {
   bucketName: string;
-  enableSSR: boolean;
+  enableSSR?: boolean;
+  ssrServiceUrl?: string;
 }
 
 export class SinglePageApplication extends Construct {
@@ -70,7 +71,10 @@ export class SinglePageApplication extends Construct {
             handler: "index.handler",
             runtime: Runtime.NODEJS_10_X,
             timeout: Duration.seconds(30),
-            role: lambdaRole
+            role: lambdaRole,
+            environment: {
+              SSR_SERVICE_URL: props.ssrServiceUrl
+            }
           })
         })
       },

@@ -2,6 +2,7 @@
   "app": "ts-node index",
   "context": {
     "bucket_name": "<your-bucket-name>",
-    "enable_ssr": true
+    "enable_ssr": true,
+    "ssr_service_url": "https://render-tron.appspot.com/render/"
   }
 }

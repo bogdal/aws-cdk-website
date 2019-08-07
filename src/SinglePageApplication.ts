@@ -78,6 +78,19 @@ export class SinglePageApplication extends Construct {
           })
         })
       },
+      {
+        eventType: LambdaEdgeEventType.ORIGIN_RESPONSE,
+        lambdaFunction: new Version(this, "OriginResponseLambdaVersion", {
+          lambda: new Function(this, "OriginResponseLambda", {
+            code: Code.asset(
+              path.join(__dirname, "lambda-edge/origin-response")
+            ),
+            handler: "index.handler",
+            runtime: Runtime.NODEJS_10_X,
+            role: lambdaRole
+          })
+        })
+      },
       ...(props.enableSSR
         ? [
             {

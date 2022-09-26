@@ -12,7 +12,7 @@
   "homepage": "https://github.com/bogdal/aws-cdk-website",
   "devDependencies": {
     "@types/node": "^12.6.8",
-    "aws-cdk": "^1.2.0",
+    "aws-cdk": "^1.174.0",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
   },
